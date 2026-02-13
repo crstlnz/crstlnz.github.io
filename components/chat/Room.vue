@@ -81,7 +81,7 @@ const infoOpen = ref(false)
 <template>
   <div id="chat-room" class="flex w-full h-[100dvh] relative">
     <Transition name="fade">
-      <div v-if="pending" class="absolute bg-black/50 flex inset-0 items-center justify-center font-bold text-4xl ">
+      <div v-if="pending" class="fixed bg-black/50 flex inset-0 items-center justify-center font-bold text-4xl ">
         <div class="animate-pulse">
           Connecting...
         </div>

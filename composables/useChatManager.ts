@@ -12,6 +12,18 @@ export default function () {
   const { id, name, avatarId } = storeToRefs(chatUser)
 
   // const tempRoomIds = useLocalStorage<Set<string>>('temp-room-ids', () => new Set())
+
+  interface Creds {
+    urls: string[]
+    username: string
+    credential: string
+  }
+  const { data } = useAsyncData<Creds[]>('turn-key', async () => {
+    const cloudflareCreds = await $fetch<Creds>(`https://api.crstlnz.my.id/api/turn`)
+    return [
+      cloudflareCreds,
+    ]
+  })
   const connections = ref<Map<string, Chat.CustomDataConnection>>(new Map())
   const error = ref()
   const isHost = ref(true)
@@ -64,7 +76,6 @@ export default function () {
   }
 
   function listenConnection(connection: Chat.CustomDataConnection) {
-    console.log('Listening', connection.peer)
     connection.removeAllListeners()
     if ([...connections.value.values()].some(i => i.data?.id === connection.data?.id)) {
       connection.close()
@@ -172,12 +183,15 @@ export default function () {
 
   function connect(room?: string) {
     error.value = null
+
     destroy()
     peer = new Peer({
       config: {
-        iceServers: [
-          { url: 'stun:stun.l.google.com:19302' },
-        ],
+        iceServers: data.value
+          ? [
+              ...data.value,
+            ]
+          : undefined,
       },
     })
 
@@ -276,8 +290,10 @@ export default function () {
     chatInput.value = ''
   }
 
-  onMounted(() => {
-    connect(route.query.room ? String(route.query.room) : undefined)
+  watch(data, (v) => {
+    if (v) {
+      connect(route.query.room ? String(route.query.room) : undefined)
+    }
   })
 
   return { connections, roomId, sendChat, messages, pending }
